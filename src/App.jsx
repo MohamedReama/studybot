@@ -207,7 +207,7 @@ function ApiKeyScreen({ onSave }) {
             {[
               ["1", "Va sur", "openrouter.ai", "https://openrouter.ai/keys"],
               ["2", "Crée un compte gratuit (Google ou email)", "", ""],
-              ["3", "Clique "Create Key" → copie la clé sk-or-...", "", ""],
+              ["3", "Clique sur Create Key et copie la cle sk-or-...", "", ""],
             ].map(([n, a, link, href]) => (
               <div key={n} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start" }}>
                 <span style={{ background: G.green, color: "#052e16", borderRadius: "50%", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>{n}</span>
