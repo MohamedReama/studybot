@@ -7,20 +7,70 @@ const OR_MODEL = "google/gemini-2.0-flash-001"; // gratuit sur OpenRouter
 const LEVELS = ["6ème","5ème","4ème","3ème","Seconde","Première","Terminale"];
 
 const SUBJECTS = [
-  { id:"physique-chimie", label:"Physique-Chimie", icon:"⚗️", available:true,  color:"#4ade80" },
-  { id:"maths",           label:"Mathématiques",   icon:"📐", available:false, color:"#60a5fa" },
-  { id:"svt",             label:"SVT",              icon:"🌿", available:false, color:"#34d399" },
-  { id:"histoire",        label:"Histoire-Géo",    icon:"🌍", available:false, color:"#f59e0b" },
+  { id:"maths",           label:"Mathématiques",      icon:"📐", color:"#60a5fa" },
+  { id:"physique-chimie", label:"Physique-Chimie",    icon:"⚗️", color:"#4ade80" },
+  { id:"svt",             label:"SVT",                icon:"🌿", color:"#34d399" },
+  { id:"histoire",        label:"Histoire-Géographie",icon:"🌍", color:"#f59e0b" },
+  { id:"ses",             label:"SES",                icon:"📊", color:"#f472b6" },
 ];
 
+// Matières disponibles par niveau (programme français officiel)
+const SUBJECTS_BY_LEVEL = {
+  "6ème":      ["maths","svt","histoire"],
+  "5ème":      ["maths","physique-chimie","svt","histoire"],
+  "4ème":      ["maths","physique-chimie","svt","histoire"],
+  "3ème":      ["maths","physique-chimie","svt","histoire"],
+  "Seconde":   ["maths","physique-chimie","svt","histoire","ses"],
+  "Première":  ["maths","physique-chimie","svt","histoire","ses"],
+  "Terminale": ["maths","physique-chimie","svt","histoire","ses"],
+};
+
 const CHAPTERS = {
-  "6ème":      ["Mélanges et corps purs","États de la matière","Mesures et grandeurs","La lumière","L'électricité"],
-  "5ème":      ["Atomes et molécules","Les métaux","Signaux lumineux","Courant électrique","L'air"],
-  "4ème":      ["Réactions chimiques","Propriétés des matériaux","Optique géométrique","Électricité","Pression"],
-  "3ème":      ["Chimie organique","Corps purs et mélanges","Électricité et magnétisme","Ondes","Réactions nucléaires"],
-  "Seconde":   ["Chimie des solutions","Mouvements et interactions","Ondes et signaux","Énergie","Structure de la matière"],
-  "Première":  ["Chimie organique","Cinétique chimique","Mécanique","Thermodynamique","Optique ondulatoire"],
-  "Terminale": ["Chimie des équilibres","Électrochimie","Mécanique avancée","Physique quantique","Relativité"],
+  maths: {
+    "6ème":      ["Nombres et calculs","Fractions et décimaux","Géométrie plane","Symétries","Statistiques et probabilités"],
+    "5ème":      ["Nombres relatifs","Proportionnalité","Triangles et angles","Calcul littéral","Aires et volumes"],
+    "4ème":      ["Puissances et racines","Équations du 1er degré","Théorème de Pythagore","Fonctions linéaires","Statistiques"],
+    "3ème":      ["Développements et factorisations","Équations et inéquations","Fonctions affines","Théorème de Thalès","Trigonométrie"],
+    "Seconde":   ["Ensembles et raisonnement","Fonctions","Géométrie analytique","Statistiques et probabilités","Équations et inéquations"],
+    "Première":  ["Suites numériques","Dérivation","Fonctions exponentielles","Probabilités conditionnelles","Géométrie dans l'espace"],
+    "Terminale": ["Limites et continuité","Intégration","Logarithme népérien","Loi normale","Arithmétique"],
+  },
+  "physique-chimie": {
+    "6ème":      [],
+    "5ème":      ["Atomes et molécules","Les métaux","Signaux lumineux","Courant électrique","L'air"],
+    "4ème":      ["Réactions chimiques","Propriétés des matériaux","Optique géométrique","Électricité","Pression"],
+    "3ème":      ["Chimie organique","Corps purs et mélanges","Électricité et magnétisme","Ondes","Réactions nucléaires"],
+    "Seconde":   ["Chimie des solutions","Mouvements et interactions","Ondes et signaux","Énergie","Structure de la matière"],
+    "Première":  ["Chimie organique","Cinétique chimique","Mécanique","Thermodynamique","Optique ondulatoire"],
+    "Terminale": ["Chimie des équilibres","Électrochimie","Mécanique avancée","Physique quantique","Relativité"],
+  },
+  svt: {
+    "6ème":      ["Le peuplement des milieux","La nutrition des êtres vivants","La reproduction","Géologie externe","Diversité du vivant"],
+    "5ème":      ["Respiration et occupation des milieux","Photosynthèse","Nutrition et digestion","Géologie interne","Évolution du vivant"],
+    "4ème":      ["La reproduction sexuée","Le système nerveux","Microorganismes et santé","Tectonique des plaques","Biodiversité"],
+    "3ème":      ["Génétique et hérédité","Corps humain et santé","Évolution des êtres vivants","Géologie et temps","Immunologie"],
+    "Seconde":   ["Cellule et origine du vivant","Alimentation et digestion","Génétique et ADN","Géosphère","Écosystèmes"],
+    "Première":  ["Génétique et expression","Physiologie végétale","Système nerveux","Évolution","Géologie approfondie"],
+    "Terminale": ["Expression génétique","Immunologie","Neurosciences","Écologie et évolution","Géologie et temps profond"],
+  },
+  histoire: {
+    "6ème":      ["La Préhistoire","La Mésopotamie","La Grèce antique","Rome antique","Les débuts du christianisme"],
+    "5ème":      ["L'Empire byzantin","L'Islam médiéval","La société féodale","Les Croisades","La Renaissance"],
+    "4ème":      ["Les Lumières","La Révolution française","L'Empire napoléonien","La révolution industrielle","Le colonialisme"],
+    "3ème":      ["La Première Guerre mondiale","La montée des totalitarismes","La Seconde Guerre mondiale","La Guerre froide","La décolonisation"],
+    "Seconde":   ["Sociétés et cultures médiévales","Humanisme et Renaissance","Christianisme et modernité","L'État et les pouvoirs","Premières mondialisation"],
+    "Première":  ["L'Europe face aux révolutions","La France de 1848 à 1914","La Première Guerre mondiale","Les régimes totalitaires","La Seconde Guerre mondiale"],
+    "Terminale": ["Fragilités des démocraties","La Guerre froide","La décolonisation","Le monde depuis 1991","La France depuis 1945"],
+  },
+  ses: {
+    "6ème":      [],
+    "5ème":      [],
+    "4ème":      [],
+    "3ème":      [],
+    "Seconde":   ["Marché et prix","Entreprises et production","Revenus et pouvoir d'achat","Institutions et pouvoirs","Socialisation et famille"],
+    "Première":  ["Croissance économique","Stratification sociale","Mondialisation","Intégration et exclusion","Déviance et contrôle social"],
+    "Terminale": ["Justice sociale","Chômage et emploi","Intégration européenne","Classes sociales","Ordre politique et démocratie"],
+  },
 };
 
 const STEP_CONFIG = [
@@ -381,11 +431,10 @@ function HomeScreen({ user, apiKey, onStart, onQuiz, onLogout, onChangeKey, sess
           <div className="fade">
             <p style={{ color: G.sub, fontSize: 13, marginBottom: 12 }}>📚 Quelle matière ?</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 22 }}>
-              {SUBJECTS.map(s => (
-                <button key={s.id} onClick={() => s.available && setSubject(s.id)} disabled={!s.available} style={{ padding: "15px 13px", borderRadius: 13, border: `1.5px solid ${subject === s.id ? s.color : s.available ? G.border : "rgba(255,255,255,0.03)"}`, background: subject === s.id ? `${s.color}16` : "rgba(255,255,255,0.02)", opacity: s.available ? 1 : 0.35, cursor: s.available ? "pointer" : "not-allowed", textAlign: "left", transition: "all .2s", position: "relative" }}>
+              {SUBJECTS.filter(s => (SUBJECTS_BY_LEVEL[level] || []).includes(s.id)).map(s => (
+                <button key={s.id} onClick={() => setSubject(s.id)} style={{ padding: "15px 13px", borderRadius: 13, border: `1.5px solid ${subject === s.id ? s.color : G.border}`, background: subject === s.id ? `${s.color}16` : "rgba(255,255,255,0.02)", cursor: "pointer", textAlign: "left", transition: "all .2s", position: "relative" }}>
                   <div style={{ fontSize: 21, marginBottom: 5 }}>{s.icon}</div>
-                  <div style={{ color: s.available ? G.text : G.muted, fontWeight: 700, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>{s.label}</div>
-                  {!s.available && <div style={{ color: G.muted, fontSize: 10, fontFamily: "'Outfit',sans-serif" }}>Bientôt</div>}
+                  <div style={{ color: G.text, fontWeight: 700, fontSize: 13, fontFamily: "'Outfit',sans-serif" }}>{s.label}</div>
                   {subject === s.id && <div style={{ position: "absolute", top: 8, right: 10, color: s.color }}>✓</div>}
                 </button>
               ))}
@@ -398,11 +447,14 @@ function HomeScreen({ user, apiKey, onStart, onQuiz, onLogout, onChangeKey, sess
           <div className="fade">
             <p style={{ color: G.sub, fontSize: 13, marginBottom: 12 }}>📖 Quel chapitre ?</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 22 }}>
-              {(CHAPTERS[level] || []).map(c => (
+              {((CHAPTERS[subject] || {})[level] || []).map(c => (
                 <button key={c} onClick={() => setChapter(c)} style={{ padding: "12px 15px", borderRadius: 11, border: `1.5px solid ${chapter === c ? G.green : G.border}`, background: chapter === c ? `${G.green}12` : "rgba(255,255,255,0.02)", color: chapter === c ? G.green : G.sub, fontFamily: "'Outfit',sans-serif", fontWeight: chapter === c ? 600 : 400, fontSize: 13, cursor: "pointer", textAlign: "left", display: "flex", justifyContent: "space-between", transition: "all .2s" }}>
                   {c}{chapter === c && <span>✓</span>}
                 </button>
               ))}
+              {((CHAPTERS[subject] || {})[level] || []).length === 0 && subject && (
+                <p style={{ color: G.muted, fontSize: 13, padding: "8px 0" }}>Pas de chapitres disponibles pour cette matière à ce niveau.</p>
+              )}
             </div>
           </div>
         )}
@@ -447,7 +499,14 @@ function QuizScreen({ config, apiKey, onFinish, onBack }) {
 
   const generate = async () => {
     setPhase("loading"); setLoadErr("");
-    const sys = `Tu es un professeur de physique-chimie expert. Genere exactement 10 questions QCM sur le chapitre "${config.chapter}" pour un eleve de ${config.level}, niveau de difficulte ${difficulty}/10.
+    const subjectLabel = {
+      "physique-chimie": "physique-chimie",
+      "maths": "mathematiques",
+      "svt": "SVT (sciences de la vie et de la terre)",
+      "histoire": "histoire-geographie",
+      "ses": "sciences economiques et sociales (SES)"
+    }[config.subject] || "physique-chimie";
+    const sys = `Tu es un professeur de ${subjectLabel} expert. Genere exactement 10 questions QCM sur le chapitre "${config.chapter}" pour un eleve de ${config.level}, niveau de difficulte ${difficulty}/10.
 
 Reponds UNIQUEMENT avec ce JSON brut, rien d'autre, aucun texte avant ou apres:
 {"questions":[{"q":"texte de la question","options":["option1","option2","option3","option4"],"answer":2,"explanation":"explication courte"}]}
@@ -639,12 +698,13 @@ function ExerciseScreen({ config, apiKey, onBack, onSave }) {
     r.readAsDataURL(f);
   };
 
-  const prompts = {
-    rappel:  `Tu es un professeur de physique-chimie bienveillant et motivant pour un élève de ${config.level}, chapitre "${config.chapter}". Fournis UNIQUEMENT un rappel des notions du cours pertinentes. NE donne PAS la solution ni d'indice de résolution. Utilise des emojis, max 180 mots. Termine par "À toi de jouer ! 🗝️"`,
-    indice1: `Tu es un professeur de physique-chimie pour un élève de ${config.level}. Donne un PREMIER INDICE général (quel concept, quelle approche) sans résoudre. Max 100 mots, encourageant 💫`,
-    indice2: `Tu es un professeur de physique-chimie pour un élève de ${config.level}. Donne un DEUXIÈME INDICE précis : quelle formule, comment identifier les données. Ne donne pas le résultat final. Max 130 mots. Termine par "Tu y es presque ! 🔥"`,
-    solution:`Tu es un professeur de physique-chimie pour un élève de ${config.level}. Fournis la SOLUTION COMPLÈTE : 1)Données 2)Formule(s) 3)Application numérique 4)Résultat avec unité. Félicite l'élève avec des emojis 🎉`,
-  };
+  const subjectName = {"physique-chimie":"physique-chimie","maths":"mathématiques","svt":"SVT","histoire":"histoire-géographie","ses":"sciences économiques et sociales"}[config.subject] || config.subject;
+    const prompts = {
+      rappel:  `Tu es un professeur de ${subjectName} bienveillant et motivant pour un élève de ${config.level}, chapitre "${config.chapter}". Fournis UNIQUEMENT un rappel des notions du cours pertinentes. NE donne PAS la solution ni d\'indice de résolution. Utilise des emojis, max 180 mots. Termine par "À toi de jouer ! 🗝️"`,
+      indice1: `Tu es un professeur de ${subjectName} pour un élève de ${config.level}. Donne un PREMIER INDICE général (quel concept, quelle approche) sans résoudre. Max 100 mots, encourageant 💫`,
+      indice2: `Tu es un professeur de ${subjectName} pour un élève de ${config.level}. Donne un DEUXIÈME INDICE précis. Ne donne pas le résultat final. Max 130 mots. Termine par "Tu y es presque ! 🔥"`,
+      solution: `Tu es un professeur de ${subjectName} pour un élève de ${config.level}. Fournis la SOLUTION COMPLÈTE et détaillée. Félicite l\'élève avec des emojis 🎉`,
+    };
 
   const stepOrder = ["rappel", "indice1", "indice2", "solution"];
   const currentIdx = stepOrder.indexOf(currentStep);
