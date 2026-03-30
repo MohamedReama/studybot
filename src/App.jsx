@@ -203,17 +203,19 @@ function ApiKeyScreen({ onSave }) {
         <Card style={{ padding: 26 }}>
           {/* Steps */}
           <div style={{ background: G.bg3, borderRadius: 12, padding: 16, marginBottom: 20 }}>
-            <p style={{ color: G.sub, fontSize: 13, fontWeight: 700, marginBottom: 10 }}>📋 Obtenir ta clé gratuite (3 min)</p>
-            {[
-              ["1", "Va sur", "openrouter.ai", "https://openrouter.ai/keys"],
-              ["2", "Crée un compte gratuit (Google ou email)", "", ""],
-              ["3", "Clique sur Create Key et copie la cle sk-or-...", "", ""],
-            ].map(([n, a, link, href]) => (
-              <div key={n} style={{ display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start" }}>
-                <span style={{ background: G.green, color: "#052e16", borderRadius: "50%", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>{n}</span>
-                <span style={{ color: G.sub, fontSize: 13 }}>{a} {link && <a href={href} target="_blank" rel="noreferrer" style={{ color: G.green, textDecoration: "none", fontWeight: 600 }}>{link}</a>}</span>
-              </div>
-            ))}
+            <p style={{ color: G.sub, fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Comment obtenir ta cle gratuite</p>
+            <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+              <span style={{ background: G.green, color: "#052e16", borderRadius: "50%", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>1</span>
+              <span style={{ color: G.sub, fontSize: 13 }}>Va sur <a href="https://openrouter.ai/keys" target="_blank" rel="noreferrer" style={{ color: G.green, textDecoration: "none" }}>openrouter.ai/keys</a></span>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+              <span style={{ background: G.green, color: "#052e16", borderRadius: "50%", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>2</span>
+              <span style={{ color: G.sub, fontSize: 13 }}>Cree un compte gratuit</span>
+            </div>
+            <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+              <span style={{ background: G.green, color: "#052e16", borderRadius: "50%", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, flexShrink: 0 }}>3</span>
+              <span style={{ color: G.sub, fontSize: 13 }}>Clique sur Create Key et copie la cle sk-or-...</span>
+            </div>
           </div>
 
           <div style={{ background:"rgba(74,222,128,0.07)", border:"1px solid rgba(74,222,128,0.2)", borderRadius:10, padding:"10px 12px", marginBottom:14 }}>
@@ -415,7 +417,12 @@ function HomeScreen({ user, apiKey, onStart, onQuiz, onLogout, onChangeKey, sess
 
         {/* Quiz CTA */}
         <div style={{ marginTop: 14 }}>
-          <button onClick={() => onQuiz({ level: level || "Seconde", subject: subject || "physique-chimie", chapter: chapter || "Énergie" })}
+          <button
+            onClick={() => {
+              if (!level) { alert("Sélectionne d\'abord ton niveau !"); return; }
+              if (!chapter) { alert("Sélectionne d\'abord un chapitre !"); return; }
+              onQuiz({ level, subject: subject || "physique-chimie", chapter });
+            }}
             style={{ width: "100%", padding: "12px", background: "rgba(250,204,21,0.06)", border: `1.5px solid rgba(250,204,21,0.22)`, borderRadius: 13, color: G.yellow, fontFamily: "'Outfit',sans-serif", fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             ⚡ Quiz rapide — Évalue ton niveau
           </button>
@@ -440,17 +447,34 @@ function QuizScreen({ config, apiKey, onFinish, onBack }) {
 
   const generate = async () => {
     setPhase("loading"); setLoadErr("");
-    const sys = `Tu es un professeur de physique-chimie. Génère exactement 10 questions QCM de difficulté ${difficulty}/10 sur le chapitre "${config.chapter}" pour un élève de ${config.level}.
-RÉPONDS UNIQUEMENT en JSON valide sans markdown :
-{"questions":[{"q":"question","options":["A","B","C","D"],"answer":0,"explanation":"explication courte"}]}
-answer est l'index 0-3 de la bonne réponse.`;
-    const raw = await callAI(apiKey, sys, `10 questions niveau ${difficulty}/10 sur ${config.chapter}`);
+    const sys = `Tu es un professeur de physique-chimie expert. Genere exactement 10 questions QCM sur le chapitre "${config.chapter}" pour un eleve de ${config.level}, niveau de difficulte ${difficulty}/10.
+
+Reponds UNIQUEMENT avec ce JSON brut, rien d'autre, aucun texte avant ou apres:
+{"questions":[{"q":"texte de la question","options":["option1","option2","option3","option4"],"answer":2,"explanation":"explication courte"}]}
+
+Regles importantes:
+- "answer" est l'index (0, 1, 2 ou 3) de la bonne reponse dans le tableau options
+- Varie les bonnes reponses: utilise 0, 1, 2 et 3 de facon aleatoire, pas toujours 0
+- Questions specifiques au chapitre ${config.chapter}, avec valeurs numeriques si pertinent
+- Difficulte ${difficulty}/10: ${difficulty <= 3 ? "definitions et formules simples" : difficulty <= 6 ? "applications numeriques" : "problemes complexes"}`;
+    const raw = await callAI(apiKey, sys, `Genere 10 QCM niveau ${difficulty}/10 sur ${config.chapter} pour ${config.level}.`);
     if (raw.startsWith("❌")) { setLoadErr(raw); setPhase("intro"); return; }
     try {
-      const clean = raw.replace(/```json|```/g, "").replace(/^[^{]*/, "").replace(/[^}]*$/, "");
-      const d = JSON.parse(clean);
-      setQuestions(d.questions || fallback());
-    } catch { setQuestions(fallback()); }
+      let clean = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+      const match = clean.match(/\{[\s\S]*"questions"[\s\S]*\}/);
+      if (!match) throw new Error("No JSON found");
+      const d = JSON.parse(match[0]);
+      const qs = (d.questions || []).map((q, i) => ({
+        q: q.q || q.question || `Question ${i+1}`,
+        options: Array.isArray(q.options) && q.options.length === 4 ? q.options : ["Option A","Option B","Option C","Option D"],
+        answer: (typeof q.answer === "number" && q.answer >= 0 && q.answer <= 3) ? q.answer : 0,
+        explanation: q.explanation || q.explication || "Relis ton cours."
+      }));
+      setQuestions(qs.length > 0 ? qs : fallback());
+    } catch(e) {
+      console.warn("Quiz parse error:", e.message);
+      setQuestions(fallback());
+    }
     setCurrent(0); setAnswers([]); setSelected(null); setConfirmed(false);
     setPhase("question");
   };
